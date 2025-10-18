@@ -1,0 +1,237 @@
+{
+  "name": "Linkedin Post Upload",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        64
+      ],
+      "id": "bdfe38fd-dce6-41c6-96db-2eee8ab22154",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        -128
+      ],
+      "id": "06dfc006-f460-43e0-9c0d-01a38c381165",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the RSS Read node\nconst items = $input.all();\n\n// Sort by ISO date (just in case)\nitems.sort((a, b) => new Date(b.json.isoDate) - new Date(a.json.isoDate));\n\n// Return only the latest item\nreturn [items[0]];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -128
+      ],
+      "id": "fe6289ad-8699-4ae2-973d-115206677ece",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": " {\n   \"type\": \"object\",\n   \"properties\": {\n      \"LinkedIN\": {\n         \"type\": \"string\"\n      }\n   }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        288
+      ],
+      "id": "59d43fdb-d642-4041-8bda-59b3b9eca7d5",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        288
+      ],
+      "id": "5c055668-fbed-4c0d-8ccd-a142e38a1722",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XYr7kKYgeVZYS6f5",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate Social content from the following text with title  {{ $json.title }}{{ $json.content }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Your goal is to create engaging and informative content for Linkedin  while ensuring each post aligns with the platform’s audience, tone, and style. Content should reflect the company’s expertise, providing value-driven insights, tutorials, reviews, and discussions that resonate with tech professionals, enthusiasts, and businesses. Each post should be optimized for engagement, using platform-specific hashtags to improve reach and SEO. Maintain a professional yet approachable tone that promotes trust and authority in the tech space. Content Creation Best Practices: Post Optimization: Adapt content format, style, and hashtags based on each social media platform’s algorithm and audience engagement patterns. SEO & Hashtags: Use a balanced mix of general hashtags and platform-specific trending hashtags to maximize reach. Engagement-driven content: Focus on tech tutorials, IT industry updates, comparisons, reviews, and in-depth discussions that spark engagement. Consistency: Maintain a consistent tone and visual identity across all platforms, while tailoring content to each audience. Data-driven trends: Regularly analyze post performance and adjust your hashtag strategy to reflect trending discussions within your topic. High-quality, relevant, and engaging copy that appeals to professionals, businesses, and enthusiasts of your topic must be provided. Platform-specific requirements: LinkedIn: Style: Concise and impactful.   Tone: Crisp, engaging, and catchy.   Content Length: 150 characters or less, including hashtags.   Create hashtags that are compatible with the topic being discussed.   Call to Action: Focus on rapid engagement through retweets, likes, and replies. With this guide, generate posts for all platforms "
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -64,
+        64
+      ],
+      "id": "30f684ba-641f-410c-a178-1e59d33661cd",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.output.properties.LinkedIN.type }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        512,
+        -96
+      ],
+      "id": "676ecee7-7983-49dd-a195-57dab74a0857",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "XYr7kKYgeVZYS6f5",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "K4ASbXygT7",
+        "text": "test",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        496,
+        128
+      ],
+      "id": "a8501074-540e-45f9-ade2-4cedcb8245dd",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "R7PlffKhYzdzx7JP",
+          "name": "LinkedIn account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0ff98406-b872-4996-a2c7-3491b2227669",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "32c7fb84c2a5895b7bb4623c2a19e35bb054f573f23bf05b886f95fe6a8eb319"
+  },
+  "id": "TUD1TyphgXsTmwJ8",
+  "tags": []
+}
